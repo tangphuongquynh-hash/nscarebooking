@@ -1,0 +1,8 @@
+{
+  "appType": "react",
+  "sourceDir": "src",
+  "outputDir": "dist",
+  "appConfig": "app-config.json",
+  "appManifest": "manifest.json",
+  "index": "index.html"
+}

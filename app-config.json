@@ -1,0 +1,16 @@
+{
+  "app": {
+    "title": "NS Care",
+  "headerTitle": "NS CARE Booking",
+  "headerColor": "#043700",
+  "textColor": "white",
+    "leftButton": "back",
+    "statusBar": "normal",
+    "actionBarHidden": false,
+    "hideAndroidBottomNavigationBar": false,
+    "hideIOSSafeAreaBottom": false
+  },
+  "listCSS": ["index-DjdB_mark.css"],
+  "listSyncJS": ["index-DIKge5bK.js"],
+  "listAsyncJS": []
+}

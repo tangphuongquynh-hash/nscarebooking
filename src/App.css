@@ -1,0 +1,22 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #dff4f3, #f5f9f9);
+}
+
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 60px; /* chừa chỗ cho BottomNav */
+}
+
+header {
+  padding: 16px;
+  text-align: center;
+  color: #0a4d4d;
+}
+
+button {
+  cursor: pointer;
+}

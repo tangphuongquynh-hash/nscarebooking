@@ -1,0 +1,25 @@
+{
+  "app": {
+    "name": "NS Care Booking",
+    "description": "Ứng dụng đặt lịch vệ sinh, giặt rèm, giặt nệm và nhiều dịch vụ khác của NS Care",
+    "version": "1.0.0",
+    "icon": "public/icon.png",
+    "orientation": "portrait",
+    "background_color": "#f5f9f9"
+  },
+  "entry": "index.html",
+  "permissions": [
+    "user:profile",
+    "user:phone"
+  ],
+  "pages": [
+    {
+      "path": "index",
+      "window": {
+  "title": "NS CARE Booking",
+  "navigationBarBackgroundColor": "#043700",
+        "navigationBarTextStyle": "white"
+      }
+    }
+  ]
+}

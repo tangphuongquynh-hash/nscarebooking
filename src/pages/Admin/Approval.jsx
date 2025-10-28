@@ -1,0 +1,438 @@
+// src/pages/Admin/Approval.jsx
+import React, { useState, useMemo } from "react";
+import { useTheme } from '../../contexts/ThemeContext';
+import { ThemedContainer, ThemedButton, ThemedText, ThemedCard, ThemedBadge, ThemedInput } from '../../components/ThemeComponents';
+
+function generateBookingCode(date, index) {
+  const d = new Date(date);
+  const year = d.getFullYear().toString().slice(-2);
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${day}${month}${year}-${String(index + 1).padStart(3, "0")}`;
+}
+
+// Generate more sample bookings for pagination demo
+const generateSampleBookings = () => {
+  const services = [
+    "Đặt lịch theo giờ | Hourly Booking",
+    "Vệ sinh máy lạnh | Air-conditioner Cleaning", 
+    "Giặt thảm, sofa | Carpet & Sofa Cleaning",
+    "Vệ sinh công nghiệp | Industrial Cleaning",
+    "Tea Lady Service",
+    "Tẩy vết bẩn cứng đầu | Hard spot cleaning",
+    "Vệ sinh văn phòng | Office Cleaning",
+    "Vệ sinh tổng thể | Full house cleaning"
+  ];
+  
+  const statuses = ["pending", "confirmed", "completed", "cancelled"];
+  const names = ["Vicky", "An", "Linh", "Minh", "Hoa", "Nam", "Thu", "Duc", "Mai", "Phong", "Lan", "Tuan", "Nga", "Hung", "Yen"];
+  const addresses = [
+    "123 Nguyễn Văn Linh, Quận 7, HCM",
+    "45 Lê Lợi, Quận 1, HCM", 
+    "99 Trần Hưng Đạo, Quận 5, HCM",
+    "Khu công nghiệp Tân Bình, HCM",
+    "87 Hai Bà Trưng, Quận 3, HCM",
+    "234 Võ Văn Tần, Quận 3, HCM",
+    "156 Lý Thường Kiệt, Quận 10, HCM",
+    "67 Pasteur, Quận 1, HCM",
+    "188 Cống Quỳnh, Quận 1, HCM",
+    "245 Điện Biên Phủ, Quận 3, HCM"
+  ];
+
+  const bookings = [];
+  for (let i = 1; i <= 50; i++) {
+    // Generate dates within last 30 days
+    const daysAgo = Math.floor(Math.random() * 30);
+    const date = new Date();
+    date.setDate(date.getDate() - daysAgo);
+    
+    const staff = Math.floor(Math.random() * 4) + 1;
+    const duration = Math.floor(Math.random() * 3) + 2; // 2-4 hours
+    const total = staff * duration * 100000;
+    
+    bookings.push({
+      id: i,
+      name: names[Math.floor(Math.random() * names.length)],
+      phone: `090${String(Math.floor(Math.random() * 10000000)).padStart(7, '0')}`,
+      date: date.toISOString().split('T')[0],
+      time: `${String(Math.floor(Math.random() * 12) + 8).padStart(2, '0')}:${Math.random() > 0.5 ? '00' : '30'}`,
+      service: services[Math.floor(Math.random() * services.length)],
+      staff: staff,
+      duration: duration,
+      address: addresses[Math.floor(Math.random() * addresses.length)],
+      total: total,
+      note: Math.random() > 0.7 ? "Ghi chú đặc biệt cho booking này" : "",
+      status: statuses[Math.floor(Math.random() * statuses.length)]
+    });
+  }
+
+  return bookings;
+};
+
+const initialBookings = generateSampleBookings();
+
+function getStatusBadge(status) {
+  const badgeStyle = {
+    minWidth: '120px',
+    textAlign: 'center',
+    whiteSpace: 'nowrap'
+  };
+  
+  switch (status) {
+    case "pending":
+      return <ThemedBadge variant="warning" size="sm" style={badgeStyle}>⏳ Đang chờ</ThemedBadge>;
+    case "confirmed":
+      return <ThemedBadge variant="primary" size="sm" style={badgeStyle}>✅ Xác nhận</ThemedBadge>;
+    case "completed":
+      return <ThemedBadge variant="success" size="sm" style={badgeStyle}>🎉 Hoàn thành</ThemedBadge>;
+    case "cancelled":
+      return <ThemedBadge variant="error" size="sm" style={badgeStyle}>❌ Đã huỷ</ThemedBadge>;
+    default:
+      return null;
+  }
+}
+
+export default function Approval() {
+  const { theme } = useTheme();
+  const [bookings, setBookings] = useState(initialBookings);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filters, setFilters] = useState({
+    status: "all",
+    name: "",
+    phone: ""
+  });
+  
+  const itemsPerPage = 20;
+
+  // Filter and sort bookings
+  const { filteredBookings, totalPages, displayedBookings } = useMemo(() => {
+    let filtered = bookings.filter((booking) => {
+      const matchesStatus = filters.status === "all" || booking.status === filters.status;
+      const matchesName = !filters.name || booking.name.toLowerCase().includes(filters.name.toLowerCase());
+      const matchesPhone = !filters.phone || booking.phone.includes(filters.phone);
+      
+      return matchesStatus && matchesName && matchesPhone;
+    });
+
+    // Sort by priority: incomplete bookings first (pending, confirmed), then completed/cancelled
+    filtered.sort((a, b) => {
+      const getPriority = (status) => {
+        switch (status) {
+          case "pending": return 1;
+          case "confirmed": return 2;
+          case "completed": return 3;
+          case "cancelled": return 4;
+          default: return 5;
+        }
+      };
+      
+      const priorityA = getPriority(a.status);
+      const priorityB = getPriority(b.status);
+      
+      if (priorityA !== priorityB) {
+        return priorityA - priorityB;
+      }
+      
+      // If same priority, sort by date (newest first)
+      return new Date(b.date) - new Date(a.date);
+    });
+
+    const total = Math.ceil(filtered.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const displayed = filtered.slice(startIndex, startIndex + itemsPerPage);
+
+    return {
+      filteredBookings: filtered,
+      totalPages: total,
+      displayedBookings: displayed
+    };
+  }, [bookings, filters, currentPage]);
+
+  const goToPage = (page) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+  };
+
+  const handleAction = (id, action) => {
+    setBookings((prev) =>
+      prev.map((b) => {
+        if (b.id === id) {
+          let newStatus = b.status;
+          let msg = "";
+          if (action === "confirm") {
+            newStatus = "confirmed";
+            msg = `📩 Gửi ZNS: Lịch hẹn ${b.name} đã được xác nhận.`;
+          } else if (action === "complete") {
+            newStatus = "completed";
+            const points = Math.floor((b.total * 0.05) / 1000);
+            msg = `📩 Gửi ZNS: Lịch hẹn hoàn tất. Cộng ${points} điểm cho ${b.name}.`;
+          } else if (action === "cancel") {
+            newStatus = "cancelled";
+            msg = `📩 Gửi ZNS: Lịch hẹn của ${b.name} đã bị huỷ.`;
+          }
+          alert(msg);
+          return { ...b, status: newStatus };
+        }
+        return b;
+      })
+    );
+  };
+
+  const exportCSV = () => {
+    const headers = [
+      "Mã",
+      "Tên",
+      "Phone",
+      "Dịch vụ",
+      "Ngày",
+      "Giờ",
+      "Số NV",
+      "Thời lượng",
+      "Tổng tiền",
+      "Trạng thái",
+      "Điểm tích luỹ",
+    ];
+
+    const rows = filteredBookings.map((b, idx) => [
+      generateBookingCode(b.date, idx),
+      b.name,
+      b.phone,
+      b.service,
+      b.date,
+      b.time,
+      b.staff,
+      b.duration,
+      b.total,
+      b.status,
+      Math.floor((b.total * 0.05) / 1000),
+    ]);
+
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      [headers, ...rows].map((r) => r.join(",")).join("\n");
+
+    const link = document.createElement("a");
+    link.setAttribute("href", encodeURI(csvContent));
+    link.setAttribute("download", "approvals.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  return (
+    <ThemedContainer variant="main" className="min-h-screen p-4 pb-24">
+      <ThemedText variant="primary" size="xl" className="font-bold text-center mb-6">
+        Phê Duyệt Booking | Approval
+      </ThemedText>
+
+      {/* Filters */}
+      <ThemedCard className="p-4 mb-6">
+        <ThemedText variant="secondary" size="sm" className="mb-3 font-semibold">
+          🔍 Bộ lọc | Filters
+        </ThemedText>
+        
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div>
+            <label className="block text-xs mb-1" style={{ color: theme.text.muted }}>
+              Tìm theo tên
+            </label>
+            <ThemedInput
+              type="text"
+              placeholder="Nhập tên khách hàng"
+              value={filters.name}
+              onChange={(e) => setFilters({ ...filters, name: e.target.value })}
+              size="sm"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-xs mb-1" style={{ color: theme.text.muted }}>
+              Tìm theo SĐT
+            </label>
+            <ThemedInput
+              type="text"
+              placeholder="Nhập số điện thoại"
+              value={filters.phone}
+              onChange={(e) => setFilters({ ...filters, phone: e.target.value })}
+              size="sm"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-xs mb-1" style={{ color: theme.text.muted }}>
+              Trạng thái
+            </label>
+            <select
+              value={filters.status}
+              onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+              className="w-full border border-gray-300 rounded-lg p-2 text-sm"
+              style={{
+                background: theme.background.secondary,
+                color: theme.text.primary,
+                borderColor: theme.primary + '40'
+              }}
+            >
+              <option value="all">Tất cả</option>
+              <option value="pending">⏳ Đang chờ</option>
+              <option value="confirmed">✅ Đã xác nhận</option>
+              <option value="completed">🎉 Hoàn thành</option>
+              <option value="cancelled">❌ Đã huỷ</option>
+            </select>
+          </div>
+          
+          <div className="flex items-end">
+            <ThemedButton
+              onClick={exportCSV}
+              variant="secondary"
+              size="sm"
+              className="w-full"
+            >
+              📊 Xuất CSV
+            </ThemedButton>
+          </div>
+        </div>
+      </ThemedCard>
+
+      {/* Pagination Info */}
+      <ThemedCard className="p-4 mb-6">
+        <ThemedText variant="muted" size="sm" className="text-center">
+          Hiển thị {displayedBookings.length} booking (trang {currentPage}/{totalPages})
+        </ThemedText>
+        <ThemedText variant="muted" size="xs" className="text-center mt-1">
+          Tổng {filteredBookings.length} booking đã lọc • Ưu tiên booking chưa hoàn thành
+        </ThemedText>
+      </ThemedCard>
+
+      {/* Bookings List */}
+      <div className="space-y-4 mb-6">
+        {displayedBookings.map((b, idx) => (
+          <ThemedCard key={b.id} className="p-4 space-y-3">
+            <div className="flex justify-between items-start gap-3 mb-2">
+              <ThemedText variant="primary" className="font-semibold flex-1 min-w-0">
+                {b.service} - {generateBookingCode(b.date, idx + (currentPage - 1) * itemsPerPage)}
+              </ThemedText>
+              <div className="flex-shrink-0">
+                {getStatusBadge(b.status)}
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+              <ThemedText variant="muted" size="sm">👤 {b.name} | 📞 {b.phone}</ThemedText>
+              <ThemedText variant="muted" size="sm">📅 {b.date} ⏰ {b.time}</ThemedText>
+              <ThemedText variant="muted" size="sm">👥 {b.staff} nhân viên | {b.duration} giờ</ThemedText>
+              <ThemedText variant="muted" size="sm">💰 {b.total.toLocaleString()} ₫</ThemedText>
+            </div>
+            
+            <ThemedText variant="muted" size="sm">🏠 {b.address}</ThemedText>
+            <ThemedText variant="accent" size="sm" className="font-semibold">
+              ⭐ Điểm tích luỹ: {Math.floor((b.total * 0.05) / 1000)}
+            </ThemedText>
+            
+            {b.note && <ThemedText variant="muted" size="sm">📝 {b.note}</ThemedText>}
+
+            <div className="flex gap-2 flex-wrap justify-start">
+              {b.status === "pending" && (
+                <button
+                  onClick={() => handleAction(b.id, "confirm")}
+                  className="px-3 py-1 text-sm rounded-lg flex-shrink-0 transition-all"
+                  style={{
+                    background: 'white',
+                    border: `1px solid ${theme.primary}`,
+                    color: theme.primary
+                  }}
+                >
+                  ✅ Xác nhận
+                </button>
+              )}
+              {(b.status === "pending" || b.status === "confirmed") && (
+                <button
+                  onClick={() => handleAction(b.id, "complete")}
+                  className="px-3 py-1 text-sm rounded-lg flex-shrink-0 transition-all"
+                  style={{
+                    background: 'white',
+                    border: `1px solid ${theme.status.success}`,
+                    color: theme.status.success
+                  }}
+                >
+                  🎉 Hoàn thành
+                </button>
+              )}
+              {b.status !== "cancelled" && b.status !== "completed" && (
+                <button
+                  onClick={() => handleAction(b.id, "cancel")}
+                  className="px-3 py-1 text-sm rounded-lg flex-shrink-0 transition-all"
+                  style={{
+                    background: 'white',
+                    border: `1px solid ${theme.status.error}`,
+                    color: theme.status.error
+                  }}
+                >
+                  ❌ Huỷ
+                </button>
+              )}
+            </div>
+          </ThemedCard>
+        ))}
+      </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <ThemedCard className="p-4 mt-6">
+          <div className="flex justify-between items-center mb-3">
+            <ThemedButton
+              onClick={() => goToPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              variant={currentPage === 1 ? "outline" : "primary"}
+              size="sm"
+            >
+              ← Trang trước
+            </ThemedButton>
+
+            <ThemedText variant="muted" size="sm">
+              Trang {currentPage} / {totalPages}
+            </ThemedText>
+
+            <ThemedButton
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              variant={currentPage === totalPages ? "outline" : "primary"}
+              size="sm"
+            >
+              Trang sau →
+            </ThemedButton>
+          </div>
+
+          {/* Page Numbers */}
+          <div className="flex justify-center space-x-1">
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNum;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = currentPage - 2 + i;
+              }
+
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => goToPage(pageNum)}
+                  className="w-8 h-8 rounded text-xs transition-all"
+                  style={{
+                    background: pageNum === currentPage ? theme.button.primary : 'rgba(255, 255, 255, 0.8)',
+                    color: pageNum === currentPage ? 'white' : theme.text.primary,
+                    border: `1px solid ${pageNum === currentPage ? 'transparent' : theme.primary + '40'}`
+                  }}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+          </div>
+        </ThemedCard>
+      )}
+    </ThemedContainer>
+  );
+}
