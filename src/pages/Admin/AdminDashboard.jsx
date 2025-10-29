@@ -2,9 +2,12 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { ThemedContainer, ThemedButton, ThemedText, ThemedCard } from "../../components/ThemeComponents";
+import ZNSTestPanel from "../../components/ZNSTestPanel";
 
 export default function AdminDashboard() {
+  const { user, isAdmin, logout } = useAuth();
   // 📊 State cho dashboard
   const [revenue, setRevenue] = useState(15200000);
   const [bookings, setBookings] = useState(42);
@@ -41,6 +44,30 @@ export default function AdminDashboard() {
       <ThemedText variant="primary" size="2xl" className="font-bold text-center mb-6">
         🧭 Admin Dashboard
       </ThemedText>
+
+      {/* --- Admin Info --- */}
+      {user && (
+        <ThemedCard className="p-4 mb-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <ThemedText variant="primary" size="lg" className="font-semibold">
+                👋 Xin chào, {user.name || "Admin"}
+              </ThemedText>
+              <ThemedText variant="secondary" size="sm">
+                📱 {user.phone} • 🔐 Quyền Admin
+              </ThemedText>
+            </div>
+            <ThemedButton 
+              variant="error" 
+              size="sm"
+              onClick={logout}
+              className="px-4 py-2"
+            >
+              🚪 Đăng xuất
+            </ThemedButton>
+          </div>
+        </ThemedCard>
+      )}
 
       {/* --- Section 1: Báo cáo --- */}
       <ThemedCard className="p-5 mb-6">
@@ -166,6 +193,9 @@ export default function AdminDashboard() {
           </Link>
         </div>
       </section>
+
+      {/* ZNS Test Panel */}
+      <ZNSTestPanel />
     </ThemedContainer>
   );
 }

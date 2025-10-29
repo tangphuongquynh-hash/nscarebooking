@@ -1,9 +1,9 @@
 {
   "app": {
     "title": "NS Care",
-  "headerTitle": "NS CARE Booking",
-  "headerColor": "#043700",
-  "textColor": "white",
+    "headerTitle": "NS CARE Booking",
+    "headerColor": "#043700",
+    "textColor": "white",
     "leftButton": "back",
     "statusBar": "normal",
     "actionBarHidden": false,

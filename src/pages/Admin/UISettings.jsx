@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { ThemedContainer, ThemedButton, ThemedText, ThemedCard } from "../../components/ThemeComponents";
+import FloatingDashboardButton from "../../components/FloatingDashboardButton";
 
 export default function UISettings() {
   const { currentTheme, themes, changeTheme } = useTheme();
@@ -145,6 +146,9 @@ export default function UISettings() {
       >
         💾 Lưu thay đổi | Save Changes
       </ThemedButton>
+
+      {/* Floating Dashboard Button */}
+      <FloatingDashboardButton />
     </ThemedContainer>
   );
 }

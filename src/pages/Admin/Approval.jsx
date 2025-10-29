@@ -3,6 +3,12 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useTheme } from '../../contexts/ThemeContext';
 import { ThemedContainer, ThemedButton, ThemedText, ThemedCard, ThemedBadge, ThemedInput } from '../../components/ThemeComponents';
 import { getBookings } from '../../api';
+import { 
+  sendBookingConfirmation, 
+  sendServiceCompletion, 
+  sendBookingCancellation 
+} from '../../services/znsService';
+import FloatingDashboardButton from '../../components/FloatingDashboardButton';
 
 function generateBookingCode(date, index) {
   const d = new Date(date);
@@ -116,29 +122,92 @@ export default function Approval() {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
   };
 
-  const handleAction = (id, action) => {
-    setBookings((prev) =>
-      prev.map((b) => {
-        if (b.id === id) {
-          let newStatus = b.status;
-          let msg = "";
-          if (action === "confirm") {
-            newStatus = "confirmed";
-            msg = `📩 Gửi ZNS: Lịch hẹn ${b.name} đã được xác nhận.`;
-          } else if (action === "complete") {
-            newStatus = "completed";
-            const points = Math.floor((b.total * 0.05) / 1000);
-            msg = `📩 Gửi ZNS: Lịch hẹn hoàn tất. Cộng ${points} điểm cho ${b.name}.`;
-          } else if (action === "cancel") {
-            newStatus = "cancelled";
-            msg = `📩 Gửi ZNS: Lịch hẹn của ${b.name} đã bị huỷ.`;
+  const handleAction = async (id, action) => {
+    const booking = bookings.find(b => b.id === id);
+    if (!booking) return;
+
+    try {
+      let newStatus = booking.status;
+      let znsResult = null;
+      let successMsg = "";
+      let errorMsg = "";
+
+      if (action === "confirm") {
+        newStatus = "confirmed";
+        console.log('📤 Sending booking confirmation ZNS...');
+        znsResult = await sendBookingConfirmation(booking);
+        
+        if (znsResult.success) {
+          successMsg = `✅ Xác nhận thành công và đã gửi ZNS cho ${booking.name}`;
+          if (znsResult.developmentMode) {
+            successMsg += ' (Development mode - check console)';
           }
-          alert(msg);
-          return { ...b, status: newStatus };
+        } else {
+          errorMsg = `⚠️ Đã xác nhận nhưng gửi ZNS thất bại: ${znsResult.error}`;
         }
-        return b;
-      })
-    );
+        
+      } else if (action === "complete") {
+        newStatus = "completed";
+        console.log('📤 Sending service completion ZNS...');
+        znsResult = await sendServiceCompletion(booking);
+        
+        const points = Math.floor(((booking.total || 0) * 0.05) / 1000);
+        if (znsResult.success) {
+          successMsg = `🎉 Hoàn thành và đã gửi ZNS thông báo ${points} điểm cho ${booking.name}`;
+          if (znsResult.developmentMode) {
+            successMsg += ' (Development mode - check console)';
+          }
+        } else {
+          errorMsg = `⚠️ Đã đánh dấu hoàn thành nhưng gửi ZNS thất bại: ${znsResult.error}`;
+        }
+        
+      } else if (action === "cancel") {
+        const reason = prompt("Lý do hủy booking (tùy chọn):", "Theo yêu cầu khách hàng");
+        if (reason === null) return; // User cancelled
+        
+        newStatus = "cancelled";
+        console.log('📤 Sending booking cancellation ZNS...');
+        znsResult = await sendBookingCancellation(booking, reason);
+        
+        if (znsResult.success) {
+          successMsg = `❌ Đã hủy booking và gửi ZNS thông báo cho ${booking.name}`;
+          if (znsResult.developmentMode) {
+            successMsg += ' (Development mode - check console)';
+          }
+        } else {
+          errorMsg = `⚠️ Đã hủy booking nhưng gửi ZNS thất bại: ${znsResult.error}`;
+        }
+      }
+
+      // Update booking status
+      setBookings((prev) =>
+        prev.map((b) => {
+          if (b.id === id) {
+            return { 
+              ...b, 
+              status: newStatus,
+              lastZnsResult: znsResult,
+              lastZnsTime: new Date().toISOString()
+            };
+          }
+          return b;
+        })
+      );
+
+      // Show result message
+      if (successMsg) {
+        alert(successMsg);
+      } else if (errorMsg) {
+        alert(errorMsg);
+      }
+
+      // Log ZNS result for debugging
+      console.log('📱 ZNS Result:', znsResult);
+      
+    } catch (error) {
+      console.error('❌ Action failed:', error);
+      alert(`❌ Lỗi: ${error.message}`);
+    }
   };
 
   const exportCSV = () => {
@@ -322,13 +391,13 @@ export default function Approval() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
               <ThemedText variant="muted" size="sm">👤 {b.name} | 📞 {b.phone}</ThemedText>
               <ThemedText variant="muted" size="sm">📅 {b.date} ⏰ {b.time}</ThemedText>
-              <ThemedText variant="muted" size="sm">👥 {b.staff} nhân viên | {b.duration} giờ</ThemedText>
-              <ThemedText variant="muted" size="sm">💰 {b.total.toLocaleString()} ₫</ThemedText>
+              <ThemedText variant="muted" size="sm">👥 {b.staff || 0} nhân viên | {b.duration || 0} giờ</ThemedText>
+              <ThemedText variant="muted" size="sm">💰 {(b.total || 0).toLocaleString()} ₫</ThemedText>
             </div>
             
-            <ThemedText variant="muted" size="sm">🏠 {b.address}</ThemedText>
+            <ThemedText variant="muted" size="sm">🏠 {b.address || 'Chưa có địa chỉ'}</ThemedText>
             <ThemedText variant="accent" size="sm" className="font-semibold">
-              ⭐ Điểm tích luỹ: {Math.floor((b.total * 0.05) / 1000)}
+              ⭐ Điểm tích luỹ: {Math.floor(((b.total || 0) * 0.05) / 1000)}
             </ThemedText>
             
             {b.note && <ThemedText variant="muted" size="sm">📝 {b.note}</ThemedText>}
@@ -437,6 +506,9 @@ export default function Approval() {
           </div>
         </ThemedCard>
       )}
+
+      {/* Floating Dashboard Button */}
+      <FloatingDashboardButton />
     </ThemedContainer>
   );
 }

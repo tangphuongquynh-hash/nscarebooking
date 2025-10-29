@@ -2,12 +2,15 @@ import React, { useEffect, useState } from "react";
 import Slider from "react-slick";
 import { Link } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
+import { useAuth } from "../contexts/AuthContext";
 import { ThemedContainer, ThemedButton, ThemedText, ThemedCard } from "../components/ThemeComponents";
+import FloatingHourlyBookingButton from "../components/FloatingHourlyBookingButton";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
 export default function Home() {
   const { theme } = useTheme();
+  const { user, isAdmin, isLoading } = useAuth();
   const [banners, setBanners] = useState([]);
   const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -55,7 +58,37 @@ export default function Home() {
 
   return (
     <ThemedContainer variant="main" className="min-h-screen p-4 pb-20">
-      {/* Quick header removed per request */}
+      {/* Auth Status Display - For Testing */}
+      {(user || isLoading) && (
+        <ThemedCard className="p-3 mb-4 border-2 border-blue-300">
+          <div className="flex justify-between items-center">
+            <div>
+              <ThemedText size="sm" className="font-semibold">
+                🔐 Auth Status
+              </ThemedText>
+              {isLoading ? (
+                <ThemedText size="xs" className="text-blue-500">🔄 Loading...</ThemedText>
+              ) : user ? (
+                <div>
+                  <ThemedText size="xs">👤 {user.name} ({user.phone})</ThemedText>
+                  <ThemedText size="xs" className={isAdmin ? "text-green-600" : "text-gray-600"}>
+                    {isAdmin ? "👑 Admin Access" : "👤 Regular User"}
+                  </ThemedText>
+                </div>
+              ) : (
+                <ThemedText size="xs" className="text-red-500">❌ Not logged in</ThemedText>
+              )}
+            </div>
+            {isAdmin && (
+              <Link to="/admin">
+                <ThemedButton size="sm" variant="primary">
+                  🧭 Admin
+                </ThemedButton>
+              </Link>
+            )}
+          </div>
+        </ThemedCard>
+      )}
 
       {/* Banner */}
       <section className="mb-6">
@@ -93,47 +126,33 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Quick booking */}
-      <section className="grid grid-cols-2 gap-4 mb-6">
-        <Link to="/hourly-booking">
-          <ThemedCard 
-            hover 
-            className="p-4 text-center h-full flex flex-col justify-between"
-            style={{
-              background: 'linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%)',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              minHeight: '120px'
-            }}
-          >
-            <div className="flex flex-col items-center justify-center flex-grow">
-              <div className="text-3xl mb-2">🧹</div>
-              <ThemedText variant="primary" size="lg" className="font-semibold mb-1">
-                Đặt lịch theo giờ
-              </ThemedText>
-              <ThemedText variant="muted" size="xs">
-                Place Hourly booking
-              </ThemedText>
-            </div>
-          </ThemedCard>
-        </Link>
-
+      {/* Points display */}
+      <section className="mb-6">
         <ThemedCard 
-          className="p-4 text-center h-full flex flex-col justify-between"
+          className="p-6 text-center"
           style={{
             background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
             border: '1px solid rgba(255, 255, 255, 0.3)',
-            minHeight: '120px'
           }}
         >
-          <div className="flex flex-col items-center justify-center flex-grow">
-            <div className="text-3xl mb-2">⭐</div>
-            <ThemedText variant="primary" size="lg" className="font-semibold mb-1">
+          <div className="flex flex-col items-center justify-center">
+            {/* Greeting */}
+            <ThemedText variant="primary" size="lg" className="font-semibold mb-2">
+              {user ? (
+                <>👋 Xin chào, {user.name || "Khách hàng"}!</>
+              ) : (
+                <>🎉 Chào mừng bạn đến với NS CARE!</>
+              )}
+            </ThemedText>
+            
+            <div className="text-4xl mb-3">⭐</div>
+            <ThemedText variant="primary" size="xl" className="font-semibold mb-1">
               Số điểm của bạn
             </ThemedText>
-            <ThemedText variant="muted" size="xs" className="mb-2">
-              Your points
+            <ThemedText variant="muted" size="sm" className="mb-3">
+              Your loyalty points
             </ThemedText>
-            <ThemedText variant="accent" size="xl" className="font-bold">
+            <ThemedText variant="accent" size="3xl" className="font-bold">
               120
             </ThemedText>
           </div>
@@ -222,14 +241,8 @@ export default function Home() {
         </div>
       </ThemedCard>
 
-      {/* Admin button */}
-      <section>
-        <Link to="/admin">
-          <ThemedButton className="w-full py-3 text-center">
-            🔑 Quản trị | Admin
-          </ThemedButton>
-        </Link>
-      </section>
+      {/* Floating Hourly Booking Button */}
+      <FloatingHourlyBookingButton />
     </ThemedContainer>
   );
 }

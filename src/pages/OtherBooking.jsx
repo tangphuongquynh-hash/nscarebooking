@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
 
-export default function OtherBooking({ user }) {
+export default function OtherBooking() {
+  const { user } = useAuth();
   const [form, setForm] = useState({
     service: "",
     quantity: 1,

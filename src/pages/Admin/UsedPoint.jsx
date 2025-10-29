@@ -1,6 +1,7 @@
 // src/pages/Admin/UsedPoint.jsx
 import React, { useState, useEffect, useMemo } from "react";
 import { getThemeGradient, getThemeClasses } from "../../utils/theme";
+import FloatingDashboardButton from "../../components/FloatingDashboardButton";
 
 const mockCustomers = [
   { phone: "0901234567", name: "Vicky", points: 120 },
@@ -500,6 +501,9 @@ export default function UsedPoint() {
           </>
         )}
       </div>
+
+      {/* Floating Dashboard Button */}
+      <FloatingDashboardButton />
     </div>
   );
 }

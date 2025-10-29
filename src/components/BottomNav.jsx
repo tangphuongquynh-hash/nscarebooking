@@ -1,17 +1,35 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Calendar, PlusCircle, Globe, MessageCircle } from "lucide-react";
+import { Home, Calendar, Globe, MessageCircle } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
 import SmartWebViewer from "./SmartWebViewer";
 
 function BottomNav() {
   const location = useLocation();
+  const { isAdmin } = useAuth();
   const [showWebsite, setShowWebsite] = useState(false);
   const [showZaloChat, setShowZaloChat] = useState(false);
   
   const navItems = [
     { path: "/", label: "Trang chủ", icon: <Home />, type: "route" },
     { path: "https://www.nscare.vn", label: "Website", icon: <Globe />, type: "website" },
-    { path: "/hourly-booking", label: "Đặt lịch", icon: <PlusCircle />, type: "route" },
+    { 
+      path: isAdmin ? "/admin" : null, 
+      label: "", 
+      icon: (
+        <div className={`relative ${isAdmin ? "animate-pulse" : ""}`}>
+          <img 
+            src="/logo.png" 
+            alt="NS CARE" 
+            className={`w-8 h-8 object-contain ${isAdmin ? "border-2 border-teal-400 rounded-lg p-1 bg-teal-50" : "opacity-70"}`}
+          />
+          {isAdmin && (
+            <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-teal-500 rounded-full animate-ping"></div>
+          )}
+        </div>
+      ), 
+      type: isAdmin ? "admin-route" : "logo" 
+    },
     { path: "/schedule", label: "Lịch hẹn", icon: <Calendar />, type: "route" },
     { path: "https://zalo.me/25541911002217776", label: "Tư vấn", icon: <MessageCircle />, type: "zalo" },
   ];
@@ -36,8 +54,28 @@ function BottomNav() {
                 className={`flex flex-col items-center text-sm ${location.pathname === item.path ? "text-teal-600" : "text-gray-500"}`}
               >
                 {item.icon}
-                <span>{item.label}</span>
+                <span className="text-xs">{item.label}</span>
               </Link>
+            );
+          } else if (item.type === "admin-route") {
+            return (
+              <Link
+                key={idx}
+                to={item.path}
+                className="flex flex-col items-center justify-center text-sm hover:scale-105 transition-all duration-300 py-2"
+              >
+                {item.icon}
+              </Link>
+            );
+          } else if (item.type === "logo") {
+            // Logo cho non-admin users - không click được
+            return (
+              <div
+                key={idx}
+                className="flex flex-col items-center justify-center text-sm text-gray-400 cursor-default py-2"
+              >
+                {item.icon}
+              </div>
             );
           } else {
             return (
@@ -52,7 +90,7 @@ function BottomNav() {
                 type="button"
               >
                 {item.icon}
-                <span>{item.label}</span>
+                <span className="text-xs">{item.label}</span>
               </button>
             );
           }
