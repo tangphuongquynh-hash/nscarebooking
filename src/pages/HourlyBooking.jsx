@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { createBooking } from '../api';
 
 const PRICE_PER_HOUR = 100000;
 const MIN_DURATION = 2;
@@ -66,14 +67,7 @@ export default function HourlyBooking() {
     };
 
     try {
-      const res = await fetch("https://api.nscare.vn/api/bookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dataToSend),
-      });
-
-      if (!res.ok) throw new Error("Không thể gửi lịch hẹn");
-      const data = await res.json();
+      const data = await createBooking(dataToSend);
       console.log("✅ Booking created:", data);
 
       // 🎉 Hiện popup

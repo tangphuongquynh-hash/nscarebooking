@@ -1,7 +1,8 @@
 // src/pages/Admin/Approval.jsx
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useTheme } from '../../contexts/ThemeContext';
 import { ThemedContainer, ThemedButton, ThemedText, ThemedCard, ThemedBadge, ThemedInput } from '../../components/ThemeComponents';
+import { getBookings } from '../../api';
 
 function generateBookingCode(date, index) {
   const d = new Date(date);
@@ -11,65 +12,7 @@ function generateBookingCode(date, index) {
   return `${day}${month}${year}-${String(index + 1).padStart(3, "0")}`;
 }
 
-// Generate more sample bookings for pagination demo
-const generateSampleBookings = () => {
-  const services = [
-    "Đặt lịch theo giờ | Hourly Booking",
-    "Vệ sinh máy lạnh | Air-conditioner Cleaning", 
-    "Giặt thảm, sofa | Carpet & Sofa Cleaning",
-    "Vệ sinh công nghiệp | Industrial Cleaning",
-    "Tea Lady Service",
-    "Tẩy vết bẩn cứng đầu | Hard spot cleaning",
-    "Vệ sinh văn phòng | Office Cleaning",
-    "Vệ sinh tổng thể | Full house cleaning"
-  ];
-  
-  const statuses = ["pending", "confirmed", "completed", "cancelled"];
-  const names = ["Vicky", "An", "Linh", "Minh", "Hoa", "Nam", "Thu", "Duc", "Mai", "Phong", "Lan", "Tuan", "Nga", "Hung", "Yen"];
-  const addresses = [
-    "123 Nguyễn Văn Linh, Quận 7, HCM",
-    "45 Lê Lợi, Quận 1, HCM", 
-    "99 Trần Hưng Đạo, Quận 5, HCM",
-    "Khu công nghiệp Tân Bình, HCM",
-    "87 Hai Bà Trưng, Quận 3, HCM",
-    "234 Võ Văn Tần, Quận 3, HCM",
-    "156 Lý Thường Kiệt, Quận 10, HCM",
-    "67 Pasteur, Quận 1, HCM",
-    "188 Cống Quỳnh, Quận 1, HCM",
-    "245 Điện Biên Phủ, Quận 3, HCM"
-  ];
-
-  const bookings = [];
-  for (let i = 1; i <= 50; i++) {
-    // Generate dates within last 30 days
-    const daysAgo = Math.floor(Math.random() * 30);
-    const date = new Date();
-    date.setDate(date.getDate() - daysAgo);
-    
-    const staff = Math.floor(Math.random() * 4) + 1;
-    const duration = Math.floor(Math.random() * 3) + 2; // 2-4 hours
-    const total = staff * duration * 100000;
-    
-    bookings.push({
-      id: i,
-      name: names[Math.floor(Math.random() * names.length)],
-      phone: `090${String(Math.floor(Math.random() * 10000000)).padStart(7, '0')}`,
-      date: date.toISOString().split('T')[0],
-      time: `${String(Math.floor(Math.random() * 12) + 8).padStart(2, '0')}:${Math.random() > 0.5 ? '00' : '30'}`,
-      service: services[Math.floor(Math.random() * services.length)],
-      staff: staff,
-      duration: duration,
-      address: addresses[Math.floor(Math.random() * addresses.length)],
-      total: total,
-      note: Math.random() > 0.7 ? "Ghi chú đặc biệt cho booking này" : "",
-      status: statuses[Math.floor(Math.random() * statuses.length)]
-    });
-  }
-
-  return bookings;
-};
-
-const initialBookings = generateSampleBookings();
+// Real bookings will be fetched from API
 
 function getStatusBadge(status) {
   const badgeStyle = {
@@ -94,7 +37,9 @@ function getStatusBadge(status) {
 
 export default function Approval() {
   const { theme } = useTheme();
-  const [bookings, setBookings] = useState(initialBookings);
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState({
     status: "all",
@@ -103,6 +48,25 @@ export default function Approval() {
   });
   
   const itemsPerPage = 20;
+
+  // Fetch bookings from API
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        setLoading(true);
+        const data = await getBookings();
+        setBookings(data);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching bookings:', err);
+        setError('Không thể tải dữ liệu booking');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBookings();
+  }, []);
 
   // Filter and sort bookings
   const { filteredBookings, totalPages, displayedBookings } = useMemo(() => {
@@ -217,6 +181,46 @@ export default function Approval() {
     link.click();
     document.body.removeChild(link);
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <ThemedContainer variant="main" className="min-h-screen p-4 pb-24">
+        <ThemedText variant="primary" size="xl" className="font-bold text-center mb-6">
+          Phê Duyệt Booking | Approval
+        </ThemedText>
+        <ThemedCard className="p-8">
+          <ThemedText variant="muted" className="text-center">
+            🔄 Đang tải dữ liệu từ server...
+          </ThemedText>
+        </ThemedCard>
+      </ThemedContainer>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <ThemedContainer variant="main" className="min-h-screen p-4 pb-24">
+        <ThemedText variant="primary" size="xl" className="font-bold text-center mb-6">
+          Phê Duyệt Booking | Approval
+        </ThemedText>
+        <ThemedCard className="p-8">
+          <ThemedText variant="error" className="text-center">
+            ❌ {error}
+          </ThemedText>
+          <ThemedButton 
+            onClick={() => window.location.reload()} 
+            variant="primary" 
+            size="sm" 
+            className="mt-4 mx-auto block"
+          >
+            🔄 Thử lại
+          </ThemedButton>
+        </ThemedCard>
+      </ThemedContainer>
+    );
+  }
 
   return (
     <ThemedContainer variant="main" className="min-h-screen p-4 pb-24">
