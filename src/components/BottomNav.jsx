@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { Home, Calendar, PlusCircle, Globe, MessageCircle } from "lucide-react";
 import { useState } from "react";
-import InAppBrowser from "./InAppBrowser";
+import SmartWebViewer from "./SmartWebViewer";
 
 function BottomNav() {
   const location = useLocation();
@@ -43,8 +43,13 @@ function BottomNav() {
             return (
               <button
                 key={idx}
-                onClick={() => handleNavClick(item)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleNavClick(item);
+                }}
                 className="flex flex-col items-center text-sm text-gray-500 hover:text-teal-600 transition-colors"
+                type="button"
               >
                 {item.icon}
                 <span>{item.label}</span>
@@ -54,19 +59,19 @@ function BottomNav() {
         })}
       </nav>
 
-      {/* In-App Website Browser */}
-      <InAppBrowser
+      {/* Smart Website Viewer */}
+      <SmartWebViewer
         isOpen={showWebsite}
         onClose={() => setShowWebsite(false)}
-        initialUrl="https://www.nscare.vn"
+        url="https://www.nscare.vn"
         title="NS CARE Website"
       />
 
-      {/* In-App Zalo Chat */}
-      <InAppBrowser
+      {/* Smart Zalo Chat Viewer */}
+      <SmartWebViewer
         isOpen={showZaloChat}
         onClose={() => setShowZaloChat(false)}
-        initialUrl="https://zalo.me/25541911002217776"
+        url="https://zalo.me/25541911002217776"
         title="Zalo Chat - Tư vấn"
       />
     </>
