@@ -153,8 +153,8 @@ export default function Schedule() {
 
             {/* Price & points */}
             <div className="flex justify-between text-sm font-medium pt-2 border-t border-gray-200">
-              <ThemedText variant="secondary">💰 {fmtVND(b.price)}</ThemedText>
-              <ThemedText variant="accent">⭐ {b.points} điểm | points</ThemedText>
+              <ThemedText variant="secondary">💰 {fmtVND(b.total || 0)}</ThemedText>
+              <ThemedText variant="accent">⭐ {b.points || 0} điểm | points</ThemedText>
             </div>
           </ThemedCard>
         ))}
