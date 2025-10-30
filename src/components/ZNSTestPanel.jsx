@@ -6,7 +6,9 @@ import {
   sendBookingConfirmation, 
   sendServiceCompletion, 
   sendBookingCancellation,
-  testZNSConnection 
+  testZNSConnection,
+  testZNSMessage,
+  generateBookingCode
 } from '../services/znsService';
 
 export default function ZNSTestPanel() {
@@ -16,19 +18,19 @@ export default function ZNSTestPanel() {
   const [testing, setTesting] = useState(false);
   const [testPhone, setTestPhone] = useState('0909123456');
 
-  // Mock booking data for testing
+  // Mock booking data for testing - theo format template 443157
   const mockBooking = {
-    id: 'test_001',
-    name: 'Nguyễn Văn Test',
+    name: 'Tăng Thị Phương Quynh',
     phone: testPhone,
-    service: 'Dọn dẹp theo giờ',
-    date: new Date().toLocaleDateString('vi-VN'),
-    time: '14:00',
-    address: '123 Đường Test, Quận 1, TP.HCM',
-    total: 500000,
-    staff: 2,
-    duration: 3
+    service: 'Tổng vệ sinh nhà',
+    date: '30/10/2025',
+    time: '14:30',
+    address: '123 Nguyễn Văn Linh, Quận 7, TP.HCM',
+    total: 500000
   };
+
+  // Preview booking code generation
+  const previewBookingCode = generateBookingCode(mockBooking.name, new Date(mockBooking.date));
 
   const addTestResult = (type, result) => {
     const newResult = {
@@ -55,10 +57,10 @@ export default function ZNSTestPanel() {
   const testConfirmation = async () => {
     setTesting(true);
     try {
-      const result = await sendBookingConfirmation({ ...mockBooking, phone: testPhone });
-      addTestResult('Booking Confirmation', result);
+      const result = await testZNSMessage();
+      addTestResult('Template 443157 - Booking Confirmation', result);
     } catch (error) {
-      addTestResult('Booking Confirmation', { success: false, error: error.message });
+      addTestResult('Template 443157 - Booking Confirmation', { success: false, error: error.message });
     } finally {
       setTesting(false);
     }
@@ -110,9 +112,14 @@ export default function ZNSTestPanel() {
     <div className="fixed bottom-4 right-4 z-50 w-96">
       <ThemedCard className="p-4 shadow-2xl border-2 border-blue-300 max-h-96 overflow-y-auto">
         <div className="flex justify-between items-center mb-3">
-          <ThemedText variant="primary" size="lg" className="font-bold">
-            📱 ZNS Test Panel
-          </ThemedText>
+          <div>
+            <ThemedText variant="primary" size="lg" className="font-bold">
+              📱 ZNS Test Panel
+            </ThemedText>
+            <ThemedText variant="muted" size="xs">
+              Template 443157 ✅ Approved
+            </ThemedText>
+          </div>
           <ThemedButton 
             size="sm" 
             variant="error"
@@ -121,6 +128,19 @@ export default function ZNSTestPanel() {
             ✕
           </ThemedButton>
         </div>
+
+        {/* Template Info */}
+        <ThemedCard className="p-2 mb-3 bg-green-50 border border-green-200">
+          <ThemedText variant="primary" size="xs" className="font-semibold mb-1">
+            📋 Template Data Preview:
+          </ThemedText>
+          <div className="text-xs space-y-1" style={{ color: theme.text.muted }}>
+            <div>booking_code: {previewBookingCode}</div>
+            <div>customer_name: {mockBooking.name}</div>
+            <div>address: {mockBooking.address}</div>
+            <div>schedule_time: {mockBooking.date} {mockBooking.time}</div>
+          </div>
+        </ThemedCard>
 
         {/* Phone Input */}
         <div className="mb-4">

@@ -11,10 +11,43 @@ export const ZNS_CONFIG = {
 
 // Template IDs cho các loại thông báo
 export const ZNS_TEMPLATES = {
-  BOOKING_CONFIRMED: "331977", // Template xác nhận đặt lịch
+  BOOKING_CONFIRMED: "443157", // Template xác nhận đặt lịch - ĐÃ ĐƯỢC DUYỆT
   BOOKING_COMPLETED: "331978", // Template hoàn thành dịch vụ  
   BOOKING_CANCELLED: "331979", // Template hủy lịch
   REMINDER: "331980" // Template nhắc nhở
+};
+
+/**
+ * Generate booking code: AAAA-yymmdd
+ * AAAA = viết tắt tên khách hàng (VD: Tăng Thị Phương Quynh -> TTQP)
+ * yymmdd = năm tháng ngày đặt booking
+ */
+export const generateBookingCode = (customerName, bookingDate = new Date()) => {
+  try {
+    // Tách tên thành các từ và lấy chữ cái đầu
+    const nameWords = customerName
+      .trim()
+      .split(/\s+/)
+      .map(word => word.charAt(0).toUpperCase())
+      .join('');
+    
+    // Đảm bảo có đúng 4 ký tự, nếu thiếu thì lặp lại
+    let initials = nameWords;
+    while (initials.length < 4) {
+      initials += nameWords;
+    }
+    initials = initials.substring(0, 4);
+    
+    // Format ngày: yymmdd
+    const year = bookingDate.getFullYear().toString().slice(-2);
+    const month = (bookingDate.getMonth() + 1).toString().padStart(2, '0');
+    const day = bookingDate.getDate().toString().padStart(2, '0');
+    
+    return `${initials}-${year}${month}${day}`;
+  } catch (error) {
+    console.error('Error generating booking code:', error);
+    return `UNKN-${Date.now().toString().slice(-6)}`;
+  }
 };
 
 /**
@@ -111,19 +144,24 @@ const formatPhoneForZNS = (phone) => {
 };
 
 /**
- * Gửi thông báo xác nhận booking
+ * Gửi thông báo xác nhận booking - Template 443157
+ * Format: {"booking_code":"booking_code","address":"address","schedule_time":"01/08/2020","customer_name":"customer_name"}
  */
 export const sendBookingConfirmation = async (booking) => {
   try {
+    // Generate booking code theo format AAAA-yymmdd
+    const bookingDate = new Date(booking.date || Date.now());
+    const bookingCode = generateBookingCode(booking.name, bookingDate);
+    
+    // Format schedule_time theo dd/mm/yyyy HH:mm
+    const scheduleTime = `${booking.date} ${booking.time}`;
+    
+    // Template data theo format đã duyệt
     const templateData = {
-      customer_name: booking.name,
-      service_name: booking.service,
-      booking_date: booking.date,
-      booking_time: booking.time,
-      address: booking.address,
-      total_amount: (booking.total || 0).toLocaleString() + ' ₫',
-      booking_code: generateBookingCode(booking.date, booking.id),
-      hotline: "1900 2024"
+      booking_code: bookingCode,
+      address: booking.address || "Địa chỉ khách hàng",
+      schedule_time: scheduleTime,
+      customer_name: booking.name
     };
 
     const result = await sendZNSMessage(
@@ -309,10 +347,37 @@ export const testZNSConnection = async () => {
   }
 };
 
+/**
+ * Test ZNS với dữ liệu mẫu
+ */
+export const testZNSMessage = async () => {
+  const sampleBooking = {
+    name: "Tăng Thị Phương Quynh",
+    phone: "0901234567", 
+    date: "30/10/2025",
+    time: "14:30",
+    address: "123 Nguyễn Văn Linh, Quận 7, TP.HCM",
+    service: "Tổng vệ sinh nhà"
+  };
+  
+  console.log('🧪 Testing ZNS with sample data:', sampleBooking);
+  
+  try {
+    const result = await sendBookingConfirmation(sampleBooking);
+    console.log('✅ ZNS Test successful:', result);
+    return result;
+  } catch (error) {
+    console.error('❌ ZNS Test failed:', error);
+    throw error;
+  }
+};
+
 export default {
   sendBookingConfirmation,
   sendServiceCompletion,
   sendBookingCancellation,
   sendBookingReminder,
-  testZNSConnection
+  testZNSConnection,
+  generateBookingCode,
+  testZNSMessage
 };
