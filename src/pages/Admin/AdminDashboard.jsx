@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { ThemedContainer, ThemedButton, ThemedText, ThemedCard } from "../../components/ThemeComponents";
-import ZNSTestPanel from "../../components/ZNSTestPanel";
 
 export default function AdminDashboard() {
   const { user, isAdmin, logout } = useAuth();
@@ -194,8 +193,7 @@ export default function AdminDashboard() {
         </div>
       </section>
 
-      {/* ZNS Test Panel */}
-      <ZNSTestPanel />
+
     </ThemedContainer>
   );
 }

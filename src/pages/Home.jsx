@@ -5,8 +5,6 @@ import { useTheme } from "../contexts/ThemeContext";
 import { useAuth } from "../contexts/AuthContext";
 import { ThemedContainer, ThemedButton, ThemedText, ThemedCard } from "../components/ThemeComponents";
 import FloatingHourlyBookingButton from "../components/FloatingHourlyBookingButton";
-import ZNSTestPanel from "../components/ZNSTestPanel";
-import AuthDebugPanel from "../components/AuthDebugPanel";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
@@ -269,19 +267,6 @@ export default function Home() {
 
       {/* Floating Hourly Booking Button */}
       <FloatingHourlyBookingButton />
-      
-      {/* Test Panels for Development & Testing */}
-      <ZNSTestPanel />
-      <AuthDebugPanel />
-      
-      {/* Test Status Display */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="fixed top-4 left-4 z-50">
-          <div className="bg-green-100 border border-green-400 text-green-700 px-3 py-2 rounded text-xs">
-            🧪 Test Mode: ZNS + Auth Ready
-          </div>
-        </div>
-      )}
     </ThemedContainer>
   );
 }
