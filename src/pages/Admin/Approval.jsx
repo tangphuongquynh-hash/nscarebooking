@@ -47,6 +47,8 @@ export default function Approval() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [editingBooking, setEditingBooking] = useState(null);
+  const [editForm, setEditForm] = useState({});
   const [filters, setFilters] = useState({
     status: "all",
     name: "",
@@ -120,6 +122,73 @@ export default function Approval() {
 
   const goToPage = (page) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+  };
+
+  // Note: For OtherBooking, admin manually inputs price and points are auto-calculated
+  // No need for automatic price calculation - admin has full control over pricing
+
+  const openEditModal = (booking) => {
+    setEditingBooking(booking);
+    
+    // Initialize form with current booking data
+    const form = {
+      name: booking.name || '',
+      phone: booking.phone || '',
+      address: booking.address || '',
+      date: booking.date || '',
+      time: booking.time || '',
+      service: booking.service || '',
+      duration: booking.duration || booking.hours || 1,
+      area: booking.area || 0,
+      staff: booking.staff || 1,
+      notes: booking.notes || '',
+      status: booking.status || 'pending'
+    };
+
+    // Set current price and calculate points accordingly
+    form.total = booking.total || 0;
+    form.points = booking.points || Math.floor(((booking.total || 0) * 0.05) / 1000);
+
+    setEditForm(form);
+  };
+
+  const closeEditModal = () => {
+    setEditingBooking(null);
+    setEditForm({});
+  };
+
+  const handleEditFormChange = (field, value) => {
+    const newForm = { ...editForm, [field]: value };
+    
+    // Only calculate points when price changes (no auto price calculation for OtherBooking)
+    if (field === 'total') {
+      newForm.points = Math.floor((value * 0.05) / 1000);
+    }
+    
+    setEditForm(newForm);
+  };
+
+  const saveEditedBooking = async () => {
+    try {
+      // Update booking in state
+      const updatedBookings = bookings.map(booking => 
+        booking.id === editingBooking.id 
+          ? { ...booking, ...editForm }
+          : booking
+      );
+      
+      setBookings(updatedBookings);
+      
+      // Here you would also save to backend API
+      console.log('💾 Saving edited booking:', { ...editingBooking, ...editForm });
+      
+      closeEditModal();
+      alert('✅ Cập nhật booking thành công!');
+      
+    } catch (error) {
+      console.error('❌ Error saving booking:', error);
+      alert('❌ Có lỗi khi cập nhật booking!');
+    }
   };
 
   const handleAction = async (id, action) => {
@@ -403,6 +472,17 @@ export default function Approval() {
             {b.note && <ThemedText variant="muted" size="sm">📝 {b.note}</ThemedText>}
 
             <div className="flex gap-2 flex-wrap justify-start">
+              <button
+                onClick={() => openEditModal(b)}
+                className="px-3 py-1 text-sm rounded-lg flex-shrink-0 transition-all"
+                style={{
+                  background: 'white',
+                  border: `1px solid ${theme.accent}`,
+                  color: theme.accent
+                }}
+              >
+                ✏️ Sửa
+              </button>
               {b.status === "pending" && (
                 <button
                   onClick={() => handleAction(b.id, "confirm")}
@@ -505,6 +585,234 @@ export default function Approval() {
             })}
           </div>
         </ThemedCard>
+      )}
+
+      {/* Edit Booking Modal */}
+      {editingBooking && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-gray-800">
+                  ✏️ Chỉnh sửa Booking
+                </h3>
+                <button
+                  onClick={closeEditModal}
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Customer Info */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      👤 Tên khách hàng
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.name || ''}
+                      onChange={(e) => handleEditFormChange('name', e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg p-3"
+                      placeholder="Nhập tên khách hàng"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      📞 Số điện thoại
+                    </label>
+                    <input
+                      type="tel"
+                      value={editForm.phone || ''}
+                      onChange={(e) => handleEditFormChange('phone', e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg p-3"
+                      placeholder="Nhập số điện thoại"
+                    />
+                  </div>
+                </div>
+
+                {/* Address */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    🏠 Địa chỉ
+                  </label>
+                  <textarea
+                    value={editForm.address || ''}
+                    onChange={(e) => handleEditFormChange('address', e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg p-3"
+                    rows="2"
+                    placeholder="Nhập địa chỉ chi tiết"
+                  />
+                </div>
+
+                {/* Date & Time */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      📅 Ngày
+                    </label>
+                    <input
+                      type="date"
+                      value={editForm.date || ''}
+                      onChange={(e) => handleEditFormChange('date', e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg p-3"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      ⏰ Giờ
+                    </label>
+                    <input
+                      type="time"
+                      value={editForm.time || ''}
+                      onChange={(e) => handleEditFormChange('time', e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg p-3"
+                    />
+                  </div>
+                </div>
+
+                {/* Service Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    🧽 Dịch vụ
+                  </label>
+                  <select
+                    value={editForm.service || ''}
+                    onChange={(e) => handleEditFormChange('service', e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg p-3"
+                  >
+                    <option value="">Chọn dịch vụ</option>
+                    <option value="industrial-cleaning">🏭 Vệ sinh công nghiệp</option>
+                    <option value="curtain-sofa-cleaning">🛋️ Giặt rèm, sofa</option>
+                    <option value="ac-cleaning">❄️ Vệ sinh điều hòa</option>
+                    <option value="washing-machine-cleaning">🌀 Vệ sinh máy giặt</option>
+                    <option value="hard-spot-cleaning">🧹 Vệ sinh đặc biệt</option>
+                    <option value="tea-lady">☕ Tea Lady</option>
+                    <option value="office-cleaning">🏢 Vệ sinh văn phòng</option>
+                    <option value="full-house-cleaning">🏠 Vệ sinh tổng thể</option>
+                  </select>
+                </div>
+
+                {/* Duration/Area/Staff */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {['hard-spot-cleaning', 'office-cleaning', 'full-house-cleaning'].includes(editForm.service) 
+                        ? '📐 Diện tích (m²)' 
+                        : '⏱️ Thời gian/Số lượng'}
+                    </label>
+                    <input
+                      type="number"
+                      value={['hard-spot-cleaning', 'office-cleaning', 'full-house-cleaning'].includes(editForm.service)
+                        ? editForm.area || '' 
+                        : editForm.duration || ''}
+                      onChange={(e) => handleEditFormChange(
+                        ['hard-spot-cleaning', 'office-cleaning', 'full-house-cleaning'].includes(editForm.service)
+                          ? 'area' 
+                          : 'duration', 
+                        Number(e.target.value)
+                      )}
+                      className="w-full border border-gray-300 rounded-lg p-3"
+                      min="1"
+                      placeholder={['hard-spot-cleaning', 'office-cleaning', 'full-house-cleaning'].includes(editForm.service)
+                        ? "50" 
+                        : "1"}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      👥 Số nhân viên
+                    </label>
+                    <input
+                      type="number"
+                      value={editForm.staff || ''}
+                      onChange={(e) => handleEditFormChange('staff', Number(e.target.value))}
+                      className="w-full border border-gray-300 rounded-lg p-3"
+                      min="1"
+                      placeholder="1"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      📊 Trạng thái
+                    </label>
+                    <select
+                      value={editForm.status || ''}
+                      onChange={(e) => handleEditFormChange('status', e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg p-3"
+                    >
+                      <option value="pending">⏳ Đang chờ</option>
+                      <option value="confirmed">✅ Đã xác nhận</option>
+                      <option value="completed">🎉 Hoàn thành</option>
+                      <option value="cancelled">❌ Đã huỷ</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Price & Points */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      💰 Tổng tiền (₫) - Admin tự nhập
+                    </label>
+                    <input
+                      type="number"
+                      value={editForm.total || ''}
+                      onChange={(e) => handleEditFormChange('total', Number(e.target.value))}
+                      className="w-full border border-gray-300 rounded-lg p-3"
+                      min="0"
+                      placeholder="Nhập giá dịch vụ"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      ⭐ Điểm tích luỹ
+                    </label>
+                    <input
+                      type="number"
+                      value={editForm.points || 0}
+                      readOnly
+                      className="w-full border border-gray-300 rounded-lg p-3 bg-gray-50"
+                      placeholder="Tự động tính (5% giá trị)"
+                    />
+                  </div>
+                </div>
+
+                {/* Notes */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    📝 Ghi chú
+                  </label>
+                  <textarea
+                    value={editForm.notes || ''}
+                    onChange={(e) => handleEditFormChange('notes', e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg p-3"
+                    rows="3"
+                    placeholder="Ghi chú thêm..."
+                  />
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 mt-6 justify-end">
+                <button
+                  onClick={closeEditModal}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                >
+                  ❌ Hủy
+                </button>
+                <button
+                  onClick={saveEditedBooking}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                >
+                  💾 Lưu thay đổi
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Floating Dashboard Button */}
