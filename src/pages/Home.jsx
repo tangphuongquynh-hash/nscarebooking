@@ -59,36 +59,60 @@ export default function Home() {
   return (
     <ThemedContainer variant="main" className="min-h-screen p-4 pb-20">
       {/* Auth Status Display - For Testing */}
-      {(user || isLoading) && (
-        <ThemedCard className="p-3 mb-4 border-2 border-blue-300">
-          <div className="flex justify-between items-center">
-            <div>
-              <ThemedText size="sm" className="font-semibold">
-                🔐 Auth Status
-              </ThemedText>
-              {isLoading ? (
-                <ThemedText size="xs" className="text-blue-500">🔄 Loading...</ThemedText>
-              ) : user ? (
-                <div>
-                  <ThemedText size="xs">👤 {user.name} ({user.phone})</ThemedText>
-                  <ThemedText size="xs" className={isAdmin ? "text-green-600" : "text-gray-600"}>
-                    {isAdmin ? "👑 Admin Access" : "👤 Regular User"}
-                  </ThemedText>
-                </div>
-              ) : (
-                <ThemedText size="xs" className="text-red-500">❌ Not logged in</ThemedText>
-              )}
-            </div>
-            {isAdmin && (
-              <Link to="/admin">
-                <ThemedButton size="sm" variant="primary">
-                  🧭 Admin
-                </ThemedButton>
-              </Link>
+      <ThemedCard className="p-3 mb-4 border-2 border-blue-300">
+        <div className="flex justify-between items-center">
+          <div>
+            <ThemedText size="sm" className="font-semibold">
+              🔐 Auth Status
+            </ThemedText>
+            {isLoading ? (
+              <ThemedText size="xs" className="text-blue-500">🔄 Loading...</ThemedText>
+            ) : user ? (
+              <div>
+                <ThemedText size="xs">👤 {user.name} ({user.phone})</ThemedText>
+                <ThemedText size="xs" className={isAdmin ? "text-green-600" : "text-gray-600"}>
+                  {isAdmin ? "👑 Admin Access" : "👤 Regular User"}
+                </ThemedText>
+              </div>
+            ) : (
+              <ThemedText size="xs" className="text-red-500">❌ Not logged in</ThemedText>
             )}
           </div>
-        </ThemedCard>
-      )}
+          <div className="flex gap-1">
+            {/* Force Admin Test Buttons */}
+            {!isAdmin ? (
+              <ThemedButton 
+                size="sm" 
+                variant="accent"
+                onClick={() => {
+                  localStorage.setItem('forceAdmin', 'true');
+                  window.location.reload();
+                }}
+              >
+                👑 Test Admin
+              </ThemedButton>
+            ) : (
+              <>
+                <ThemedButton 
+                  size="sm" 
+                  variant="muted"
+                  onClick={() => {
+                    localStorage.removeItem('forceAdmin');
+                    window.location.reload();
+                  }}
+                >
+                  � Reset
+                </ThemedButton>
+                <Link to="/admin">
+                  <ThemedButton size="sm" variant="primary">
+                    🧭 Admin
+                  </ThemedButton>
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      </ThemedCard>
 
       {/* Banner */}
       <section className="mb-6">

@@ -38,6 +38,19 @@ export const AuthProvider = ({ children }) => {
           console.log('👤 Restored user from localStorage:', existingUser);
         }
 
+        // Check for forced admin mode first (for testing)
+        const forceAdmin = localStorage.getItem('forceAdmin') === 'true';
+        if (forceAdmin) {
+          setUser({
+            id: 'test-admin',
+            name: 'Test Admin',
+            phone: '0000000000'
+          });
+          setIsAdmin(true);
+          console.log('👑 Force admin mode enabled');
+          return;
+        }
+
         // Try to initialize Zalo auth (only works in Zalo environment)
         try {
           const authResult = await initializeZaloAuth();
