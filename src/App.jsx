@@ -7,6 +7,8 @@ import Home from "./pages/Home";
 import HourlyBooking from "./pages/HourlyBooking";
 import OtherBooking from "./pages/OtherBooking";
 import Schedule from "./pages/Schedule";
+import ZMPDemo from "./pages/ZMPDemo";
+import ZMPBooking from "./pages/ZMPBooking";
 import BottomNav from "./components/BottomNav";
 import Header from "./components/Header";
 import AuthDebugPanel from "./components/AuthDebugPanel";
@@ -45,6 +47,8 @@ function AppContent({ location, hideBottomNav }) {
         <Route path="/hourly-booking" element={<HourlyBooking />} />
         <Route path="/other-booking" element={<OtherBooking />} />
         <Route path="/schedule" element={<Schedule />} />
+        <Route path="/zmp-demo" element={<ZMPDemo />} />
+        <Route path="/zmp-booking" element={<ZMPBooking />} />
 
         {/* Trang admin được bảo vệ */}
         <Route path="/admin" element={

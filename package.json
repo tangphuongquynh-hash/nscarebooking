@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "zdev": "zmp start",
-  "dev:all": "node ./scripts/dev-all.cjs",
+    "dev:all": "node ./scripts/dev-all.cjs",
     "build": "vite build",
     "preview": "vite preview",
     "zbuild": "zmp build",
@@ -20,7 +20,8 @@
     "react-slick": "^0.31.0",
     "slick-carousel": "^1.8.1",
     "socket.io-client": "^4.8.1",
-    "zmp-sdk": "^2.48.2"
+    "zmp-sdk": "^2.48.2",
+    "zmp-ui": "^1.11.12-7"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.1",

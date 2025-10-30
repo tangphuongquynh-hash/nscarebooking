@@ -265,6 +265,24 @@ export default function Home() {
         </div>
       </ThemedCard>
 
+      {/* ZMP UI Demo Links - Development */}
+      {process.env.NODE_ENV === 'development' && (
+        <ThemedCard className="p-4 mb-6">
+          <div className="space-y-3">
+            <Link to="/zmp-demo">
+              <ThemedButton variant="secondary" size="sm" className="w-full">
+                🎨 ZMP UI Components Demo
+              </ThemedButton>
+            </Link>
+            <Link to="/zmp-booking">
+              <ThemedButton variant="primary" size="sm" className="w-full">
+                📋 ZMP Booking Form Demo
+              </ThemedButton>
+            </Link>
+          </div>
+        </ThemedCard>
+      )}
+
       {/* Floating Hourly Booking Button */}
       <FloatingHourlyBookingButton />
     </ThemedContainer>

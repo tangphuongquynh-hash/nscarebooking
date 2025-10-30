@@ -5,6 +5,7 @@ import App from "./App";
 import { login } from "zmp-sdk";
 import "./index.css";
 import "./App.css";
+import "zmp-ui/zaui.css"; // ZMP UI styles
 
 // Minimal Error Boundary to display errors instead of a white screen
 class ErrorBoundary extends React.Component {
