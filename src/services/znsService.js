@@ -301,16 +301,7 @@ export const sendBookingReminder = async (booking) => {
   }
 };
 
-/**
- * Generate booking code
- */
-function generateBookingCode(date, id) {
-  const d = new Date(date);
-  const year = d.getFullYear().toString().slice(-2);
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${day}${month}${year}-${String(id).padStart(3, "0")}`;
-}
+// Note: generateBookingCode function is already defined above (line ~20)
 
 /**
  * Test ZNS connection
