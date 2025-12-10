@@ -1,4 +1,5 @@
 const API_URL = "https://nscare-backend.onrender.com/api"; // backend của chị trên Render
+import { zaloFetch, ZaloAPIError } from './utils/zaloAPI';
 
 // Mock data for comprehensive testing
 const MOCK_BOOKINGS = [
@@ -88,47 +89,44 @@ export async function createBooking(data) {
   try {
     console.log('📝 Creating booking:', data);
     
-    // Try real API first
-    const res = await fetch(`${API_URL}/bookings`, {
+    // Try real API first with Zalo-specific fetch
+    const result = await zaloFetch(`${API_URL}/bookings`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
     
-    if (res.ok) {
-      return await res.json();
-    }
+    return result;
+    
   } catch (error) {
     console.log('⚠️ API unavailable, using mock response');
+    console.log('Error details:', error);
+    
+    // Fallback to mock response
+    const newBooking = {
+      ...data,
+      id: Date.now(),
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    };
+    
+    console.log('✅ Mock booking created:', newBooking);
+    return newBooking;
   }
-  
-  // Fallback to mock response
-  const newBooking = {
-    ...data,
-    id: Date.now(),
-    status: 'pending',
-    createdAt: new Date().toISOString()
-  };
-  
-  console.log('✅ Mock booking created:', newBooking);
-  return newBooking;
 }
 
 export async function getBookings() {
   try {
     console.log('📊 Fetching bookings from API...');
-    const res = await fetch(`${API_URL}/bookings`);
+    const data = await zaloFetch(`${API_URL}/bookings`);
+    console.log('✅ API bookings loaded:', data.length);
+    return data;
     
-    if (res.ok) {
-      const data = await res.json();
-      console.log('✅ API bookings loaded:', data.length);
-      return data;
-    }
   } catch (error) {
     console.log('⚠️ API unavailable, using mock data');
+    console.log('Error details:', error);
+    
+    // Fallback to mock data
+    console.log('📋 Using mock bookings:', MOCK_BOOKINGS.length);
+    return MOCK_BOOKINGS;
   }
-  
-  // Fallback to mock data
-  console.log('📋 Using mock bookings:', MOCK_BOOKINGS.length);
-  return MOCK_BOOKINGS;
 }

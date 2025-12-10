@@ -5,6 +5,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import { useAuth } from "../contexts/AuthContext";
 import { ThemedContainer, ThemedButton, ThemedText, ThemedCard } from "../components/ThemeComponents";
 import FloatingHourlyBookingButton from "../components/FloatingHourlyBookingButton";
+import APITestPanel from "../components/APITestPanel";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
@@ -265,26 +266,33 @@ export default function Home() {
         </div>
       </ThemedCard>
 
-      {/* ZMP UI Demo Links - Development */}
-      {process.env.NODE_ENV === 'development' && (
-        <ThemedCard className="p-4 mb-6">
-          <div className="space-y-3">
-            <Link to="/zmp-demo">
-              <ThemedButton variant="secondary" size="sm" className="w-full">
-                🎨 ZMP UI Components Demo
-              </ThemedButton>
-            </Link>
-            <Link to="/zmp-booking">
-              <ThemedButton variant="primary" size="sm" className="w-full">
-                📋 ZMP Booking Form Demo
-              </ThemedButton>
-            </Link>
-          </div>
-        </ThemedCard>
-      )}
+      {/* ZMP UI Demo Links */}
+      <ThemedCard className="p-4 mb-6">
+        <ThemedText variant="primary" size="lg" className="font-bold mb-3 text-center">
+          🎨 Zalo Mini App UI Demo
+        </ThemedText>
+        <div className="space-y-3">
+          <Link to="/zmp-demo">
+            <ThemedButton variant="primary" size="sm" className="w-full">
+              � ZMP Components Demo
+            </ThemedButton>
+          </Link>
+          <Link to="/zmp-booking">
+            <ThemedButton variant="secondary" size="sm" className="w-full">
+              📋 ZMP Booking Form Example
+            </ThemedButton>
+          </Link>
+        </div>
+        <ThemedText variant="muted" size="xs" className="text-center mt-3">
+          Sử dụng native Zalo Mini App UI components
+        </ThemedText>
+      </ThemedCard>
 
       {/* Floating Hourly Booking Button */}
       <FloatingHourlyBookingButton />
+      
+      {/* API Test Panel */}
+      <APITestPanel />
     </ThemedContainer>
   );
 }
