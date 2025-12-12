@@ -1,4 +1,4 @@
-const API_URL = "https://nscare-backend.onrender.com/api"; // backend của chị trên Render
+const API_URL = "https://api.nscare.vn/api"; // backend server riêng
 import { zaloFetch, ZaloAPIError } from './utils/zaloAPI';
 
 // Mock data for comprehensive testing

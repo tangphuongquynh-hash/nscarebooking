@@ -155,7 +155,7 @@ export const checkAdminRole = async (userInfo) => {
 
     // Method 6: Check backend API (recommended)
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://nscare-backend.onrender.com/api'}/admin/check-role`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://api.nscare.vn/api'}/admin/check-role`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
